@@ -1,0 +1,1 @@
+# A mini cryptocurrency example implemented in Go
