@@ -5,37 +5,60 @@ import (
 	"fmt"
 )
 
+type Configs struct {
+	blockChain          []Block
+	pendingTransactions []Transaction
+}
+
+type BlockChain struct {
+	chain               []Block
+	pendingTransactions []Transaction
+}
+
 type Transaction struct {
-	senderID          string
-	receiverID        string
-	transactionAmount float64
-	transactionFee    float64
-	time              string
-	hash              string
-	message           string
+	senderID   string
+	receiverID string
+	amount     float64
+	fee        float64
+	time       string
+	hash       string
+	message    string
+	signature  string
 }
 
 type Block struct {
 	index                   int
-	previousBlock           string
+	previousBlockID         string
 	time                    string
 	hash                    string
 	selectedTransactionList []Transaction
+	nonce                   int
 }
 
-var blockChain []Block
-var pendingTransactions []Transaction
-
-func AddNewBlocks() {
+func mineNewBlock(difficulty int) {
 
 }
 
-func (T *Transaction) HashCalculation() {
-	hashString := T.senderID + T.receiverID + fmt.Sprintf("%f", T.transactionAmount) + T.time
+func (T *Transaction) transactionHashCalculation() {
+	hashString := T.senderID + T.receiverID + fmt.Sprintf("%f", T.amount) + T.time
 	h := sha256.New()
 	h.Write([]byte(hashString))
-	fmt.Printf("%x", h.Sum(nil))
+	T.hash = fmt.Sprintf("%v", h.Sum(nil))
+	fmt.Printf("%x", T)
+}
 
+func (BC *Block) blockHashCalculation() {
+	hashT := ""
+	for _, eachT := range BC.selectedTransactionList {
+		hashT += eachT.hash
+	}
+
+	hashString := BC.time + hashT + BC.previousBlockID + fmt.Sprintf("%v", BC.index)
+
+	h := sha256.New()
+	h.Write([]byte(hashString))
+	BC.hash = fmt.Sprintf("%v", h.Sum(nil))
+	fmt.Printf("%v", BC)
 
 }
 
