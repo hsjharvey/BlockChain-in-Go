@@ -25,7 +25,7 @@ func (T *Transaction) transactionHashCalculation() {
 	fmt.Printf("%x", T)
 }
 
-func InitTransaction(senderID string, receiverID string, amount float64, fee float64, ) Transaction {
+func InitTransaction(senderID string, receiverID string, amount float64, fee float64) Transaction {
 	T := Transaction{
 		senderID:   senderID,
 		receiverID: receiverID,
@@ -33,6 +33,7 @@ func InitTransaction(senderID string, receiverID string, amount float64, fee flo
 		fee:        fee,
 		time:       fmt.Sprintf("%v", time.Now().Unix()),
 	}
+
 	T.transactionHashCalculation()
 	return T
 }
