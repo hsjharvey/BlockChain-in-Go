@@ -36,6 +36,10 @@ func MineNewBlock(minerHashID string, BLK Block, BC *BlockChain, difficulty int)
 			BLK.BlockHashCalculation()
 		} else {
 			BLK.minerID = minerHashID
+			coinbaseT := CoinBaseTransaction(minerHashID)
+			BLK.selectedTransactionList = append(BLK.selectedTransactionList, coinbaseT)
+
+			BC.chain = append(BC.chain, BLK)
 
 			fmt.Println("New Block " + BLK.hash + " by " + BLK.minerID)
 			break
@@ -55,4 +59,8 @@ func (BLK *Block) BlockHashCalculation() {
 	h.Write([]byte(hashString))
 	BLK.hash = fmt.Sprintf("%v", h.Sum(nil))
 	fmt.Printf("%v", BLK)
+}
+
+func CreateGenesisBlock() {
+
 }

@@ -37,3 +37,17 @@ func InitTransaction(senderID string, receiverID string, amount float64, fee flo
 	T.transactionHashCalculation()
 	return T
 }
+
+func CoinBaseTransaction(minerID string) Transaction {
+	T := Transaction{
+		senderID:   "coinbase",
+		receiverID: minerID,
+		amount:     50,
+		fee:        0,
+		time:       fmt.Sprintf("%v", time.Now().Unix()),
+		message:    "reward for block miner",
+	}
+
+	T.transactionHashCalculation()
+	return T
+}
