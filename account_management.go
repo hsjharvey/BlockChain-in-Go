@@ -28,11 +28,11 @@ func CreateNewAccount(accountID string) {
 
 	publicKey := key.PublicKey
 
-	saveGobKey("private"+accountID+".key", key)
-	savePEMKey("private"+accountID+".pem", key)
+	saveGobKey("private_"+accountID+".key", key)
+	savePEMKey("private_"+accountID+".pem", key)
 
-	saveGobKey("public"+accountID+".key", publicKey)
-	savePublicPEMKey("public"+accountID+".pem", publicKey)
+	saveGobKey("public_"+accountID+".key", publicKey)
+	savePublicPEMKey("public_"+accountID+".pem", publicKey)
 }
 
 func saveGobKey(fileName string, key interface{}) {
