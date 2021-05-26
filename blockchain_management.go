@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
@@ -54,13 +55,30 @@ func (BLK *Block) BlockHashCalculation() {
 	}
 
 	hashString := BLK.time + hashT + BLK.previousBlockID + fmt.Sprintf("%v", BLK.nonce)
-
-	h := sha256.New()
-	h.Write([]byte(hashString))
-	BLK.hash = fmt.Sprintf("%v", h.Sum(nil))
+	h := sha256.Sum256([]byte(hashString))
+	BLK.hash = base64.StdEncoding.EncodeToString(h[:])
 	fmt.Printf("%v", BLK)
 }
 
-func CreateGenesisBlock() {
+func CreateGenesisBlock(genesisUser string) {
+	var TList []Transaction
+	genesisT := InitTransaction("Harvey", genesisUser, 5000.0, 0.0)
+	TList = append(TList, genesisT)
+
+	b := Block{
+		index:                   0,
+		previousBlockID:         "BigBang",
+		time:                    getCurrentUnixTime(),
+		selectedTransactionList: TList,
+		nonce:                   1992,
+		minerID:                 "Harvey",
+	}
+
+	b.BlockHashCalculation()
+
+	fmt.Println("-------------------------")
+	fmt.Println("Genesis block generated")
+	fmt.Println(b)
+	fmt.Println("-------------------------")
 
 }

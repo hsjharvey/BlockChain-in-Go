@@ -3,23 +3,16 @@ package main
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
-	"encoding/asn1"
+	"encoding/base64"
 	"encoding/gob"
 	"encoding/pem"
+	"fmt"
 	"os"
 )
 
-type accountAddress struct {
-	hashID           string
-	noOfTransactions int
-	totalReceive     float64
-	totalSend        float64
-	balance          float64
-	transactions     []Transaction
-}
-
-func CreateNewAccount(accountID string) {
+func CreateNewAccount(accountID string) string {
 	reader := rand.Reader
 	bitSize := 2048
 
@@ -32,7 +25,27 @@ func CreateNewAccount(accountID string) {
 	savePEMKey("private_"+accountID+".pem", key)
 
 	saveGobKey("public_"+accountID+".key", publicKey)
-	savePublicPEMKey("public_"+accountID+".pem", publicKey)
+	savePublicPEMKey("public_"+accountID+".pem", &publicKey)
+
+	accountAddress := hashAndSaveAddress("sha256_base64_encoded_address_"+accountID+".txt", &publicKey)
+	return accountAddress
+}
+
+func hashAndSaveAddress(fileName string, pubKey *rsa.PublicKey) string {
+	outFile, err := os.Create(fileName)
+	checkError(err)
+	defer outFile.Close()
+
+	h := sha256.Sum256(x509.MarshalPKCS1PublicKey(pubKey))
+	hashString := base64.StdEncoding.EncodeToString(h[:])
+	_, err = outFile.WriteString(hashString)
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		os.Exit(1)
+	}
+	checkError(err)
+
+	return hashString
 }
 
 func saveGobKey(fileName string, key interface{}) {
@@ -59,13 +72,10 @@ func savePEMKey(fileName string, key *rsa.PrivateKey) {
 	checkError(err)
 }
 
-func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) {
-	asn1Bytes, err := asn1.Marshal(pubkey)
-	checkError(err)
-
+func savePublicPEMKey(fileName string, key *rsa.PublicKey) {
 	var pemkey = &pem.Block{
 		Type:  "PUBLIC KEY",
-		Bytes: asn1Bytes,
+		Bytes: x509.MarshalPKCS1PublicKey(key),
 	}
 
 	pemfile, err := os.Create(fileName)

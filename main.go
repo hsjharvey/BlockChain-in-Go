@@ -1,8 +1,6 @@
 package main // import "golang"
 
-import (
-	"fmt"
-)
+import "fmt"
 
 type Configs struct {
 	blockChain          []Block
@@ -11,8 +9,12 @@ type Configs struct {
 
 func main() {
 	// create users
-	// CreateNewAccount("bmm1")
-	// CreateNewAccount("bmm2")
+	bmm1Address := CreateNewAccount("bmm1")
+	bmm2Address := CreateNewAccount("bmm2")
+	fmt.Println("user accounts generated")
+	fmt.Println(bmm1Address)
+	fmt.Println(bmm2Address)
+	CreateGenesisBlock(bmm1Address)
 
 	// create new transaction
 
@@ -27,5 +29,4 @@ func main() {
 	// validate the transaction and broadcast to everyone in the network
 
 	// pendingTransactions := make(chan []Transaction)
-	fmt.Println("account generated")
 }
