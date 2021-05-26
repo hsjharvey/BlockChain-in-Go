@@ -1,1 +1,1 @@
-# A mini cryptocurrency example implemented in Go
+# A mini blockchain example implemented in Go
