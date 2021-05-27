@@ -21,13 +21,13 @@ func CreateNewAccount(accountID string) string {
 
 	publicKey := key.PublicKey
 
-	saveGobKey("private_"+accountID+".key", key)
-	savePEMKey("private_"+accountID+".pem", key)
+	saveGobKey("./accounts/private_"+accountID+".key", key)
+	savePEMKey("./accounts/private_"+accountID+".pem", key)
 
-	saveGobKey("public_"+accountID+".key", publicKey)
-	savePublicPEMKey("public_"+accountID+".pem", &publicKey)
+	saveGobKey("./accounts/public_"+accountID+".key", publicKey)
+	savePublicPEMKey("./accounts/public_"+accountID+".pem", &publicKey)
 
-	accountAddress := hashAndSaveAddress("sha256_base64_encoded_address_"+accountID+".txt", &publicKey)
+	accountAddress := hashAndSaveAddress("./accounts/sha256_base64_encoded_address_"+accountID+".txt", &publicKey)
 	return accountAddress
 }
 

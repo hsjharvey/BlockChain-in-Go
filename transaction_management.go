@@ -13,14 +13,14 @@ import (
 )
 
 type Transaction struct {
-	senderAddress   string
-	receiverAddress string
-	amount          float64
-	fee             float64
-	time            string
-	hash            string
-	message         string
-	signature       []byte
+	From      string  `json:"From"`
+	To        string  `json:"To"`
+	Amount    float64 `json:"Amount"`
+	Fee       float64 `json:"Fee"`
+	Time      string  `json:"Time"`
+	Hash      string  `json:"Hash"`
+	Message   string  `json:"Message"`
+	Signature []byte  `json:"Signature"`
 }
 
 type MEMPool struct {
@@ -28,19 +28,19 @@ type MEMPool struct {
 }
 
 func (T *Transaction) transactionHashCalculation() {
-	hashString := T.senderAddress + T.receiverAddress + fmt.Sprintf("%f", T.amount) + T.time
+	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + T.Time
 	h := sha256.Sum256([]byte(hashString))
-	T.hash = base64.StdEncoding.EncodeToString(h[:])
-	fmt.Printf("%x", T)
+	T.Hash = base64.StdEncoding.EncodeToString(h[:])
 }
 
-func InitTransaction(senderAddress string, receiverAddress string, amount float64, fee float64) Transaction {
+func InitTransaction(senderAddress string, receiverAddress string, amount float64, fee float64, message string) Transaction {
 	T := Transaction{
-		senderAddress:   senderAddress,
-		receiverAddress: receiverAddress,
-		amount:          amount,
-		fee:             fee,
-		time:            getCurrentUnixTime(),
+		From:    senderAddress,
+		To:      receiverAddress,
+		Amount:  amount,
+		Fee:     fee,
+		Time:    getCurrentUnixTime(),
+		Message: message,
 	}
 
 	T.transactionHashCalculation()
@@ -61,29 +61,30 @@ func getPrivateKey(fileLocation string) (*rsa.PrivateKey, error) {
 	return der, err
 }
 
-func (T *Transaction) SignTransaction(fileLocation string) {
-	privateKey, _ := getPrivateKey(fileLocation)
-	signature, _ := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, []byte(T.hash))
-	T.signature = signature
+func (T *Transaction) SignTransaction(privateKeyLocation string) {
+	privateKey, _ := getPrivateKey(privateKeyLocation)
+	signature, _ := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, []byte(T.Hash))
+	T.Signature = signature
 }
 
 func (MP *MEMPool) SendTransactionToPool(T Transaction) {
-	// Step 1: verify this is a valid transaction
-
-	// Step 2: send the transaction to the Pending MEMPOOL
 	MP.pendingTransactions = append(MP.pendingTransactions, T)
 }
 
 func CoinBaseTransaction(minerID string) Transaction {
 	T := Transaction{
-		senderAddress:   "coinbase",
-		receiverAddress: minerID,
-		amount:          50,
-		fee:             0,
-		time:            getCurrentUnixTime(),
-		message:         "reward for block miner",
+		From:    "coinbase",
+		To:      minerID,
+		Amount:  50,
+		Fee:     0,
+		Time:    getCurrentUnixTime(),
+		Message: "reward for block miner",
 	}
 
 	T.transactionHashCalculation()
 	return T
+}
+
+func (MP *MEMPool) PickTxAndVerifyValidity() {
+
 }

@@ -1,6 +1,6 @@
 package main
 
-type accountAddress struct {
+type AccountInfo struct {
 	hashID           string
 	noOfTransactions int
 	totalReceive     float64
