@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"sort"
 )
 
 type Transaction struct {
@@ -17,10 +18,11 @@ type Transaction struct {
 	To        string  `json:"To"`
 	Amount    float64 `json:"Amount"`
 	Fee       float64 `json:"Fee"`
-	Time      string  `json:"Time"`
+	Time      string  `json:"TimeStamp"`
 	Hash      string  `json:"Hash"`
 	Message   string  `json:"Message"`
 	Signature []byte  `json:"Signature"`
+	Accepted  bool    `json:"Accepted"`
 }
 
 type MEMPool struct {
@@ -67,24 +69,47 @@ func (T *Transaction) SignTransaction(privateKeyLocation string) {
 	T.Signature = signature
 }
 
-func (MP *MEMPool) SendTransactionToPool(T Transaction) {
+func (T Transaction) SendTransactionToPool(MP *MEMPool) {
 	MP.pendingTransactions = append(MP.pendingTransactions, T)
 }
 
-func CoinBaseTransaction(minerID string) Transaction {
+func CoinBaseTransaction(minerID string, NB *Block) {
+	totalGas := 0.0
+	for _, eachTx := range NB.SelectedTransactionList {
+		totalGas += eachTx.Fee
+	}
+
 	T := Transaction{
 		From:    "coinbase",
 		To:      minerID,
-		Amount:  50,
+		Amount:  50 + totalGas,
 		Fee:     0,
 		Time:    getCurrentUnixTime(),
 		Message: "reward for block miner",
 	}
 
 	T.transactionHashCalculation()
-	return T
+	NB.SelectedTransactionList = append(NB.SelectedTransactionList, T)
 }
 
-func (MP *MEMPool) PickTxAndVerifyValidity() {
+func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
+	sort.Slice(MP.pendingTransactions, func(i, j int) bool {
+		return MP.pendingTransactions[i].Fee > MP.pendingTransactions[j].Fee
+	})
 
+	idx := 0
+	for {
+		if len(NB.SelectedTransactionList) < 2 {
+			MP.pendingTransactions[idx].TxValidityCheck()
+			if MP.pendingTransactions[idx].Accepted {
+				NB.SelectedTransactionList = append(NB.SelectedTransactionList)
+			}
+		} else {
+			break
+		}
+	}
+}
+
+func (T *Transaction) TxValidityCheck() {
+	T.Accepted = true
 }

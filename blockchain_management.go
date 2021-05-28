@@ -15,16 +15,25 @@ type BlockChain struct {
 type Block struct {
 	Index                   int           `json:"Index"`
 	PreviousBlockAddress    string        `json:"PreviousBlockAddress"`
-	Time                    string        `json:"Time"`
+	TimeStamp               string        `json:"TimeStamp"`
 	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 	MinerAddress            string        `json:"MinerAddress"`
 	Nonce                   int           `json:"Nonce"`
 	Hash                    string        `json:"Hash"`
 }
 
-func MineNewBlock(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
+func InitializeNewBlock(BC *BlockChain) Block {
+	lastBlock := BC.Chain[len(BC.Chain)-1]
+	newBLK := Block{}
+	newBLK.Index = lastBlock.Index + 1
+	newBLK.PreviousBlockAddress = lastBlock.Hash
+	return newBLK
+}
+func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
 	// determine difficulty level
 	var diff []string
+	BLK.Nonce = 0
+
 	for i := 0; i <= difficulty; i++ {
 		diff = append(diff, strconv.Itoa(i))
 	}
@@ -32,18 +41,19 @@ func MineNewBlock(minerHashID string, BLK Block, BC *BlockChain, difficulty int)
 
 	// solve the problem
 	for {
+		BLK.TimeStamp = getCurrentUnixTime()
+
 		if BLK.Hash[0:difficulty] != problemToBeSolved {
 			BLK.Nonce += 1
 			BLK.BlockHashCalculation()
 		} else {
 			BLK.MinerAddress = minerHashID
-			coinbaseT := CoinBaseTransaction(minerHashID)
-			BLK.SelectedTransactionList = append(BLK.SelectedTransactionList, coinbaseT)
+			CoinBaseTransaction(minerHashID, &BLK)
 
 			BC.Chain = append(BC.Chain, BLK)
 
 			fmt.Println("-------------------------")
-			fmt.Println("New Block " + BLK.Hash + " by " + BLK.MinerAddress)
+			fmt.Println("New Block " + BLK.Hash + " mined by " + BLK.MinerAddress)
 			fmt.Println("-------------------------")
 			break
 		}
@@ -51,12 +61,12 @@ func MineNewBlock(minerHashID string, BLK Block, BC *BlockChain, difficulty int)
 }
 
 func (BLK *Block) BlockHashCalculation() {
-	hashT := ""
-	for _, eachT := range BLK.SelectedTransactionList {
-		hashT += eachT.Hash
+	hashTx := ""
+	for _, eachTx := range BLK.SelectedTransactionList {
+		hashTx += eachTx.Hash
 	}
 
-	hashString := BLK.Time + hashT + BLK.PreviousBlockAddress + fmt.Sprintf("%v", BLK.Nonce)
+	hashString := BLK.TimeStamp + hashTx + BLK.PreviousBlockAddress + fmt.Sprintf("%v", BLK.Nonce)
 	h := sha256.Sum256([]byte(hashString))
 	BLK.Hash = base64.StdEncoding.EncodeToString(h[:])
 }
@@ -70,7 +80,7 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 	b := Block{
 		Index:                   0,
 		PreviousBlockAddress:    "BigBang",
-		Time:                    getCurrentUnixTime(),
+		TimeStamp:               getCurrentUnixTime(),
 		SelectedTransactionList: TList,
 		Nonce:                   1992,
 		MinerAddress:            "Harvey",
