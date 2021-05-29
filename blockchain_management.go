@@ -75,6 +75,10 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 	var TList []Transaction
 	genesisT := InitTransaction("God", genesisUser, 5000.0, 0.0,
 		"hello world")
+
+	genesisT.Signature = []byte("signed by God")
+	genesisT.Accepted = true
+
 	TList = append(TList, genesisT)
 
 	b := Block{
@@ -89,6 +93,8 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 	b.BlockHashCalculation()
 
 	BC.Chain = append(BC.Chain, b)
+
+	genesisT.updateAaccount()
 
 	fmt.Println("-------------------------")
 	fmt.Println("Genesis block generated")

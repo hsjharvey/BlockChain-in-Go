@@ -1,9 +1,7 @@
 package main
 
 import (
-	"crypto"
-	"crypto/rand"
-	"crypto/rsa"
+	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
@@ -11,6 +9,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sort"
+
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Transaction struct {
@@ -49,23 +49,23 @@ func InitTransaction(senderAddress string, receiverAddress string, amount float6
 	return T
 }
 
-func getPrivateKey(fileLocation string) (*rsa.PrivateKey, error) {
+func getPrivateKey(fileLocation string) (*ecdsa.PrivateKey, error) {
 	key, err := ioutil.ReadFile(fileLocation)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 
 	block, _ := pem.Decode(key)
-	der, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
+	der, err := x509.ParseECPrivateKey(block.Bytes)
+	checkError(err)
+
 	return der, err
 }
 
 func (T *Transaction) SignTransaction(privateKeyLocation string) {
 	privateKey, _ := getPrivateKey(privateKeyLocation)
-	signature, _ := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, []byte(T.Hash))
+
+	signature, err := crypto.Sign([]byte(T.Hash), privateKey)
+	checkError(err)
+
 	T.Signature = signature
 }
 
@@ -93,6 +93,7 @@ func CoinBaseTransaction(minerID string, NB *Block) {
 }
 
 func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
+	// sort the pending transactions based on fees
 	sort.Slice(MP.pendingTransactions, func(i, j int) bool {
 		return MP.pendingTransactions[i].Fee > MP.pendingTransactions[j].Fee
 	})
@@ -100,6 +101,7 @@ func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
 	idx := 0
 	for {
 		if len(NB.SelectedTransactionList) < 2 {
+			// check the balance and the validity of the transaction
 			MP.pendingTransactions[idx].TxValidityCheck()
 			if MP.pendingTransactions[idx].Accepted {
 				NB.SelectedTransactionList = append(NB.SelectedTransactionList)
@@ -111,5 +113,26 @@ func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
 }
 
 func (T *Transaction) TxValidityCheck() {
-	T.Accepted = true
+	// Step 1: check whether has enough balance
+	Bal := BalanceCheck(T.From)
+	if Bal >= T.Fee {
+		// Step 2: verify signature
+		sigPublicKey, err := crypto.Ecrecover([]byte(T.Hash), T.Signature)
+		checkError(err)
+
+		ms, err := x509.MarshalPKIXPublicKey(sigPublicKey)
+		checkError(err)
+
+		h := sha256.Sum256(ms)
+		hashString := base64.StdEncoding.EncodeToString(h[:])
+
+		if hashString == T.From {
+			T.Accepted = true
+		} else {
+			T.Accepted = false
+		}
+
+	} else {
+		T.Accepted = false
+	}
 }

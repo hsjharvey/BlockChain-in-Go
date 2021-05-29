@@ -14,7 +14,7 @@ func main() {
 	// create users and miner
 	bmm1Address := CreateNewAccount("bmm1")
 	bmm2Address := CreateNewAccount("bmm2")
-	miner1Address := CreateNewAccount("miner1")
+	//miner1Address := CreateNewAccount("miner1")
 	fmt.Println("user and miner accounts generated")
 
 	CreateGenesisBlock(bmm1Address, &BC)
@@ -38,7 +38,7 @@ func main() {
 	PickTxAndVerifyValidity(&newBlock, MP)
 
 	// mining (solve the math problem)
-	Mining(miner1Address, newBlock, &BC, 1)
+	// Mining(miner1Address, newBlock, &BC, 2)
 
 	// (if mining successful and no new block in the blockchain, requires async receiving msg from the network)
 	// broadcast to everyone in the network
