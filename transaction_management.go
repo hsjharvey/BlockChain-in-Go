@@ -2,27 +2,27 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
 	"sort"
-
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Transaction struct {
-	From      string  `json:"From"`
-	To        string  `json:"To"`
-	Amount    float64 `json:"Amount"`
-	Fee       float64 `json:"Fee"`
-	Time      string  `json:"TimeStamp"`
-	Hash      string  `json:"Hash"`
-	Message   string  `json:"Message"`
-	Signature []byte  `json:"Signature"`
-	Accepted  bool    `json:"Accepted"`
+	From       string  `json:"From"`
+	To         string  `json:"To"`
+	Amount     float64 `json:"Amount"`
+	Fee        float64 `json:"Fee"`
+	Time       string  `json:"TimeStamp"`
+	HashString string  `json:"HashString"`
+	Message    string  `json:"Message"`
+	Signature  []byte  `json:"Signature"`
+	Accepted   bool    `json:"Accepted"`
 }
 
 type MEMPool struct {
@@ -32,7 +32,7 @@ type MEMPool struct {
 func (T *Transaction) transactionHashCalculation() {
 	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + T.Time
 	h := sha256.Sum256([]byte(hashString))
-	T.Hash = base64.StdEncoding.EncodeToString(h[:])
+	T.HashString = base64.StdEncoding.EncodeToString(h[:])
 }
 
 func InitTransaction(senderAddress string, receiverAddress string, amount float64, fee float64, message string) Transaction {
@@ -53,17 +53,21 @@ func getPrivateKey(fileLocation string) (*ecdsa.PrivateKey, error) {
 	key, err := ioutil.ReadFile(fileLocation)
 	checkError(err)
 
-	block, _ := pem.Decode(key)
-	der, err := x509.ParseECPrivateKey(block.Bytes)
+	fileBytes, _ := pem.Decode(key)
+	der, err := x509.ParseECPrivateKey(fileBytes.Bytes)
 	checkError(err)
 
 	return der, err
 }
 
 func (T *Transaction) SignTransaction(privateKeyLocation string) {
-	privateKey, _ := getPrivateKey(privateKeyLocation)
+	privateKey, err := getPrivateKey(privateKeyLocation)
+	checkError(err)
 
-	signature, err := crypto.Sign([]byte(T.Hash), privateKey)
+	decodedVal, err := base64.StdEncoding.DecodeString(T.HashString)
+	checkError(err)
+
+	signature, err := crypto.Sign(decodedVal, privateKey)
 	checkError(err)
 
 	T.Signature = signature
@@ -117,14 +121,16 @@ func (T *Transaction) TxValidityCheck() {
 	Bal := BalanceCheck(T.From)
 	if Bal >= T.Fee {
 		// Step 2: verify signature
-		sigPublicKey, err := crypto.Ecrecover([]byte(T.Hash), T.Signature)
+		decodedVal, err := base64.StdEncoding.DecodeString(T.HashString)
 		checkError(err)
 
-		ms, err := x509.MarshalPKIXPublicKey(sigPublicKey)
+		pubKey, err := crypto.Ecrecover(decodedVal, T.Signature)
 		checkError(err)
 
-		h := sha256.Sum256(ms)
+		h := sha256.Sum256(pubKey)
 		hashString := base64.StdEncoding.EncodeToString(h[:])
+		fmt.Println(hashString)
+		fmt.Println(T.From)
 
 		if hashString == T.From {
 			T.Accepted = true
@@ -135,4 +141,41 @@ func (T *Transaction) TxValidityCheck() {
 	} else {
 		T.Accepted = false
 	}
+}
+
+func testSignatureFc() {
+	hs := "helloworld"
+
+	data := []byte(hs)
+	decodedVal := sha256.Sum256(data)
+	de, _ := pem.Decode([]byte(pbk))
+	x, err := x509.ParsePKIXPublicKey(de.Bytes)
+	readPubKey, _ := x.(*ecdsa.PublicKey)
+	checkError(err)
+	//fmt.Printf("Got a %T, readPubKey)
+	fmt.Println("Public key")
+	fmt.Println(readPubKey)
+	de, _ = pem.Decode([]byte(prk))
+	readPrivateKey, err := x509.ParseECPrivateKey(de.Bytes)
+
+	fmt.Println("Private key")
+	fmt.Println(readPrivateKey)
+
+	signature, err := crypto.Sign(decodedVal[:], readPrivateKey)
+	checkError(err)
+
+	recoverPubKeyBytes, err := crypto.Ecrecover(decodedVal[:], signature)
+	fmt.Println(recoverPubKeyBytes)
+	//checkError(err)
+	//fmt.Println("public key")
+	//fmt.Println(recoverPubKeyBytes)
+	//
+	//fmt.Println(readPubKey == recoverPubKeyBytes)
+
+	r, s, err := ecdsa.Sign(rand.Reader, readPrivateKey, decodedVal[:])
+	if err != nil {
+		return
+	}
+	matches := ecdsa.Verify(readPubKey, decodedVal[:], r, s)
+	fmt.Println(matches)
 }

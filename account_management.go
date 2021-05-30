@@ -18,7 +18,7 @@ type AccountInfo struct {
 	Transactions []Transaction `json:"Transactions"`
 }
 
-var AccountManagement map[string]*AccountInfo
+var AccountManagement = make(map[string]*AccountInfo)
 
 func CreateNewAccount(accountID string) string {
 	reader := rand.Reader
@@ -29,7 +29,7 @@ func CreateNewAccount(accountID string) string {
 
 	publicKey := privateKey.PublicKey
 
-	savePEMKey("./accounts/private_"+accountID+".pem", privateKey)
+	savePrivatePEMKey("./accounts/private_"+accountID+".pem", privateKey)
 	savePublicPEMKey("./accounts/public_"+accountID+".pem", &publicKey)
 
 	accountAddress := hashAndSaveAddress("./accounts/sha256_base64_encoded_address_"+accountID+".txt", &publicKey)
@@ -45,19 +45,27 @@ func CreateNewAccount(accountID string) string {
 	return accountAddress
 }
 
-func (T Transaction) updateAaccount() {
+func createCoinbaseAccount() {
+	newAccount := AccountInfo{
+		TxCount:      0,
+		TotalReceive: 31415926535897932384626433,
+		TotalSend:    0.0,
+		Transactions: []Transaction{},
+	}
+	AccountManagement["coinbase"] = &newAccount
+}
+
+func (T Transaction) updateAccount() {
 	if T.Accepted {
 		// update sender
-		sender := *AccountManagement[T.From]
-		sender.TxCount += 1
-		sender.TotalSend += T.Amount
-		sender.Transactions = append(sender.Transactions, T)
+		AccountManagement[T.From].TxCount += 1
+		AccountManagement[T.From].TotalSend += T.Amount
+		AccountManagement[T.From].Transactions = append(AccountManagement[T.From].Transactions, T)
 
 		// update receiver
-		receiver := *AccountManagement[T.To]
-		receiver.TxCount += 1
-		receiver.TotalReceive += T.Amount
-		receiver.Transactions = append(receiver.Transactions, T)
+		AccountManagement[T.To].TxCount += 1
+		AccountManagement[T.To].TotalReceive += T.Amount
+		AccountManagement[T.To].Transactions = append(AccountManagement[T.To].Transactions, T)
 	}
 }
 
@@ -81,7 +89,7 @@ func hashAndSaveAddress(fileName string, pubKey *ecdsa.PublicKey) string {
 	return hashString
 }
 
-func savePEMKey(fileName string, key *ecdsa.PrivateKey) {
+func savePrivatePEMKey(fileName string, key *ecdsa.PrivateKey) {
 	outFile, err := os.Create(fileName)
 	checkError(err)
 	defer outFile.Close()
@@ -99,18 +107,18 @@ func savePEMKey(fileName string, key *ecdsa.PrivateKey) {
 }
 
 func savePublicPEMKey(fileName string, key *ecdsa.PublicKey) {
+	outFile, err := os.Create(fileName)
+	checkError(err)
+	defer outFile.Close()
+
 	ms, err := x509.MarshalPKIXPublicKey(key)
 	checkError(err)
 
-	var pemkey = &pem.Block{
+	var publicKey = &pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: ms,
 	}
 
-	pemfile, err := os.Create(fileName)
-	checkError(err)
-	defer pemfile.Close()
-
-	err = pem.Encode(pemfile, pemkey)
+	err = pem.Encode(outFile, publicKey)
 	checkError(err)
 }

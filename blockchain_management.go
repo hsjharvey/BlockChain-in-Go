@@ -19,7 +19,7 @@ type Block struct {
 	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 	MinerAddress            string        `json:"MinerAddress"`
 	Nonce                   int           `json:"Nonce"`
-	Hash                    string        `json:"Hash"`
+	Hash                    string        `json:"HashString"`
 }
 
 func InitializeNewBlock(BC *BlockChain) Block {
@@ -27,6 +27,8 @@ func InitializeNewBlock(BC *BlockChain) Block {
 	newBLK := Block{}
 	newBLK.Index = lastBlock.Index + 1
 	newBLK.PreviousBlockAddress = lastBlock.Hash
+
+	fmt.Println("New Block initialized")
 	return newBLK
 }
 func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
@@ -63,7 +65,7 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
 func (BLK *Block) BlockHashCalculation() {
 	hashTx := ""
 	for _, eachTx := range BLK.SelectedTransactionList {
-		hashTx += eachTx.Hash
+		hashTx += eachTx.HashString
 	}
 
 	hashString := BLK.TimeStamp + hashTx + BLK.PreviousBlockAddress + fmt.Sprintf("%v", BLK.Nonce)
@@ -72,8 +74,9 @@ func (BLK *Block) BlockHashCalculation() {
 }
 
 func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
+	createCoinbaseAccount()
 	var TList []Transaction
-	genesisT := InitTransaction("God", genesisUser, 5000.0, 0.0,
+	genesisT := InitTransaction("coinbase", genesisUser, 5000.0, 0.0,
 		"hello world")
 
 	genesisT.Signature = []byte("signed by God")
@@ -94,7 +97,7 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 
 	BC.Chain = append(BC.Chain, b)
 
-	genesisT.updateAaccount()
+	genesisT.updateAccount()
 
 	fmt.Println("-------------------------")
 	fmt.Println("Genesis block generated")
