@@ -2,11 +2,8 @@ package main
 
 import (
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
@@ -52,19 +49,21 @@ func InitTransaction(senderAddress string, receiverAddress string, amount float6
 func getPrivateKey(fileLocation string) (*ecdsa.PrivateKey, error) {
 	key, err := ioutil.ReadFile(fileLocation)
 	checkError(err)
+	key1, err := crypto.HexToECDSA(string(key))
 
-	fileBytes, _ := pem.Decode(key)
-	der, err := x509.ParseECPrivateKey(fileBytes.Bytes)
-	checkError(err)
+	//fileBytes, _ := pem.Decode(key)
+	//der, err := x509.ParseECPrivateKey(fileBytes.Bytes)
+	//
+	//checkError(err)
 
-	return der, err
+	return key1, err
 }
 
 func (T *Transaction) SignTransaction(privateKeyLocation string) {
 	privateKey, err := getPrivateKey(privateKeyLocation)
 	checkError(err)
 
-	decodedVal, err := base64.StdEncoding.DecodeString(T.HashString)
+	decodedVal := crypto.Keccak256([]byte(T.HashString))
 	checkError(err)
 
 	signature, err := crypto.Sign(decodedVal, privateKey)
@@ -105,10 +104,12 @@ func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
 	idx := 0
 	for {
 		if len(NB.SelectedTransactionList) < 2 {
+			fmt.Println(len(NB.SelectedTransactionList))
 			// check the balance and the validity of the transaction
 			MP.pendingTransactions[idx].TxValidityCheck()
 			if MP.pendingTransactions[idx].Accepted {
-				NB.SelectedTransactionList = append(NB.SelectedTransactionList)
+				// add this valid transaction to the new block
+				NB.SelectedTransactionList = append(NB.SelectedTransactionList, MP.pendingTransactions[idx])
 			}
 		} else {
 			break
@@ -121,61 +122,16 @@ func (T *Transaction) TxValidityCheck() {
 	Bal := BalanceCheck(T.From)
 	if Bal >= T.Fee {
 		// Step 2: verify signature
-		decodedVal, err := base64.StdEncoding.DecodeString(T.HashString)
+		recoveredPub, err := crypto.SigToPub(crypto.Keccak256([]byte(T.HashString)), T.Signature)
 		checkError(err)
+		recoveredAddr := crypto.PubkeyToAddress(*recoveredPub)
 
-		pubKey, err := crypto.Ecrecover(decodedVal, T.Signature)
-		checkError(err)
-
-		h := sha256.Sum256(pubKey)
-		hashString := base64.StdEncoding.EncodeToString(h[:])
-		fmt.Println(hashString)
-		fmt.Println(T.From)
-
-		if hashString == T.From {
+		if recoveredAddr.String() == T.From {
 			T.Accepted = true
 		} else {
 			T.Accepted = false
 		}
-
 	} else {
 		T.Accepted = false
 	}
-}
-
-func testSignatureFc() {
-	hs := "helloworld"
-
-	data := []byte(hs)
-	decodedVal := sha256.Sum256(data)
-	de, _ := pem.Decode([]byte(pbk))
-	x, err := x509.ParsePKIXPublicKey(de.Bytes)
-	readPubKey, _ := x.(*ecdsa.PublicKey)
-	checkError(err)
-	//fmt.Printf("Got a %T, readPubKey)
-	fmt.Println("Public key")
-	fmt.Println(readPubKey)
-	de, _ = pem.Decode([]byte(prk))
-	readPrivateKey, err := x509.ParseECPrivateKey(de.Bytes)
-
-	fmt.Println("Private key")
-	fmt.Println(readPrivateKey)
-
-	signature, err := crypto.Sign(decodedVal[:], readPrivateKey)
-	checkError(err)
-
-	recoverPubKeyBytes, err := crypto.Ecrecover(decodedVal[:], signature)
-	fmt.Println(recoverPubKeyBytes)
-	//checkError(err)
-	//fmt.Println("public key")
-	//fmt.Println(recoverPubKeyBytes)
-	//
-	//fmt.Println(readPubKey == recoverPubKeyBytes)
-
-	r, s, err := ecdsa.Sign(rand.Reader, readPrivateKey, decodedVal[:])
-	if err != nil {
-		return
-	}
-	matches := ecdsa.Verify(readPubKey, decodedVal[:], r, s)
-	fmt.Println(matches)
 }

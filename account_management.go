@@ -2,12 +2,7 @@ package main
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/sha256"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
+	"github.com/ethereum/go-ethereum/crypto"
 	"os"
 )
 
@@ -21,18 +16,15 @@ type AccountInfo struct {
 var AccountManagement = make(map[string]*AccountInfo)
 
 func CreateNewAccount(accountID string) string {
-	reader := rand.Reader
-	p256 := elliptic.P256()
-
-	privateKey, err := ecdsa.GenerateKey(p256, reader)
+	privateKey, err := crypto.GenerateKey()
 	checkError(err)
 
 	publicKey := privateKey.PublicKey
 
-	savePrivatePEMKey("./accounts/private_"+accountID+".pem", privateKey)
-	savePublicPEMKey("./accounts/public_"+accountID+".pem", &publicKey)
+	savePrivateKey("./accounts/private_"+accountID+".pem", privateKey)
+	//savePublicPEMKey("./accounts/public_"+accountID+".pem", &publicKey)
 
-	accountAddress := hashAndSaveAddress("./accounts/sha256_base64_encoded_address_"+accountID+".txt", &publicKey)
+	accountAddress := hashAndSaveAddress("./accounts/sha256_base64_encoded_address_"+accountID+".txt", publicKey)
 
 	newAccount := AccountInfo{
 		TxCount:      0,
@@ -73,52 +65,23 @@ func BalanceCheck(AccountAddress string) float64 {
 	return AccountManagement[AccountAddress].TotalReceive - AccountManagement[AccountAddress].TotalSend
 }
 
-func hashAndSaveAddress(fileName string, pubKey *ecdsa.PublicKey) string {
+func hashAndSaveAddress(fileName string, pubKey ecdsa.PublicKey) string {
 	outFile, err := os.Create(fileName)
 	checkError(err)
 	defer outFile.Close()
 
-	ms, err := x509.MarshalPKIXPublicKey(pubKey)
+	hashString := crypto.PubkeyToAddress(pubKey)
+	_, err = outFile.WriteString(hashString.String())
 	checkError(err)
 
-	h := sha256.Sum256(ms)
-	hashString := base64.StdEncoding.EncodeToString(h[:])
-	_, err = outFile.WriteString(hashString)
-	checkError(err)
-
-	return hashString
+	return hashString.String()
 }
 
-func savePrivatePEMKey(fileName string, key *ecdsa.PrivateKey) {
+func savePrivateKey(fileName string, key *ecdsa.PrivateKey) {
 	outFile, err := os.Create(fileName)
 	checkError(err)
 	defer outFile.Close()
 
-	ms, err := x509.MarshalECPrivateKey(key)
-	checkError(err)
-
-	var privateKey = &pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: ms,
-	}
-
-	err = pem.Encode(outFile, privateKey)
-	checkError(err)
-}
-
-func savePublicPEMKey(fileName string, key *ecdsa.PublicKey) {
-	outFile, err := os.Create(fileName)
-	checkError(err)
-	defer outFile.Close()
-
-	ms, err := x509.MarshalPKIXPublicKey(key)
-	checkError(err)
-
-	var publicKey = &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: ms,
-	}
-
-	err = pem.Encode(outFile, publicKey)
+	err = crypto.SaveECDSA(fileName, key)
 	checkError(err)
 }
