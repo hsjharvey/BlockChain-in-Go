@@ -6,6 +6,9 @@
 
 - This is a synchronous mini example of an ethereum based blockchain system, implemented in Go.
 
+<p align="center">
+    <img src="https://github.com/hsjharvey/Presentations/blob/master/2021_blockchain_illustration.svg">
+</p>
 <br>
 
 ## Requirement
