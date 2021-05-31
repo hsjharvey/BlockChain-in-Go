@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
 	"sort"
@@ -104,7 +103,6 @@ func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
 	idx := 0
 	for {
 		if len(NB.SelectedTransactionList) < 2 {
-			fmt.Println(len(NB.SelectedTransactionList))
 			// check the balance and the validity of the transaction
 			MP.pendingTransactions[idx].TxValidityCheck()
 			if MP.pendingTransactions[idx].Accepted {

@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -19,6 +18,7 @@ type Block struct {
 	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 	MinerAddress            string        `json:"MinerAddress"`
 	Nonce                   int           `json:"Nonce"`
+	Difficulty              int           `json:"Difficulty"`
 	Hash                    string        `json:"HashString"`
 }
 
@@ -27,19 +27,24 @@ func InitializeNewBlock(BC *BlockChain) Block {
 	newBLK := Block{}
 	newBLK.Index = lastBlock.Index + 1
 	newBLK.PreviousBlockAddress = lastBlock.Hash
+	newBLK.Nonce = 0
+	newBLK.BlockHashCalculation()
 
-	fmt.Println("New Block initialized")
+	//fmt.Println("New Block initialized")
+
 	return newBLK
 }
 func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
 	// determine difficulty level
 	var diff []string
-	BLK.Nonce = 0
+	BLK.Difficulty = difficulty
 
-	for i := 0; i <= difficulty; i++ {
+	for i := 0; i < difficulty; i++ {
 		diff = append(diff, strconv.Itoa(i))
 	}
-	problemToBeSolved := strings.Join(diff[:], ",")
+	problemToBeSolved := strings.Join(diff[:], "")
+
+	//fmt.Println("Target hash: " + problemToBeSolved)
 
 	// solve the problem
 	for {
@@ -54,9 +59,7 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
 
 			BC.Chain = append(BC.Chain, BLK)
 
-			fmt.Println("-------------------------")
-			fmt.Println("New Block " + BLK.Hash + " mined by " + BLK.MinerAddress)
-			fmt.Println("-------------------------")
+			//fmt.Println("New Block (" + BLK.Hash + ") mined by (" + BLK.MinerAddress + ")")
 			break
 		}
 	}
@@ -68,7 +71,7 @@ func (BLK *Block) BlockHashCalculation() {
 		hashTx += eachTx.HashString
 	}
 
-	hashString := BLK.TimeStamp + hashTx + BLK.PreviousBlockAddress + fmt.Sprintf("%v", BLK.Nonce)
+	hashString := BLK.TimeStamp + hashTx + BLK.PreviousBlockAddress + string(BLK.Nonce)
 	h := sha256.Sum256([]byte(hashString))
 	BLK.Hash = base64.StdEncoding.EncodeToString(h[:])
 }
@@ -99,7 +102,5 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 
 	genesisT.updateAccount()
 
-	fmt.Println("-------------------------")
-	fmt.Println("Genesis block generated")
-	fmt.Println("-------------------------")
+	//fmt.Println("Genesis block generated")
 }

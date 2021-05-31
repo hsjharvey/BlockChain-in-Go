@@ -7,7 +7,7 @@ import (
 )
 
 type AccountInfo struct {
-	TxCount      int           `json:"TxCount"`
+	TxCount      int           `json:"TxCount"` //this is the account nonce
 	TotalReceive float64       `json:"TotalReceive"`
 	TotalSend    float64       `json:"TotalSend"`
 	Transactions []Transaction `json:"Transactions"`
@@ -24,7 +24,7 @@ func CreateNewAccount(accountID string) string {
 	savePrivateKey("./accounts/private_"+accountID+".pem", privateKey)
 	//savePublicPEMKey("./accounts/public_"+accountID+".pem", &publicKey)
 
-	accountAddress := hashAndSaveAddress("./accounts/sha256_base64_encoded_address_"+accountID+".txt", publicKey)
+	accountAddress := hashAndSaveAddress("./accounts/encoded_address_"+accountID+".txt", publicKey)
 
 	newAccount := AccountInfo{
 		TxCount:      0,

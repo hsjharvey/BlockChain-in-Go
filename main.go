@@ -1,14 +1,11 @@
 package main // import "golang"
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 )
 
 func main() {
-	//testSignatureFc()
-
 	//initialize a blockchain
 	BC := BlockChain{}
 	MP := MEMPool{}
@@ -16,8 +13,8 @@ func main() {
 	// create users and miner
 	bmm1Address := CreateNewAccount("bmm1")
 	bmm2Address := CreateNewAccount("bmm2")
-	//miner1Address := CreateNewAccount("miner1")
-	fmt.Println("user and miner accounts generated")
+	miner1Address := CreateNewAccount("miner1")
+	//fmt.Println("User and miner accounts generated")
 
 	CreateGenesisBlock(bmm1Address, &BC)
 
@@ -38,14 +35,16 @@ func main() {
 
 	// miner pick and verify the validity of the transactions
 	PickTxAndVerifyValidity(&newBlock, MP)
-	fmt.Println("Finish picking up txs and complete verification txs process")
+	//fmt.Println("Finish picking up transactions and complete verification process")
 
 	//mining (solve the math problem)
-	//Mining(miner1Address, newBlock, &BC, 2)
+	//fmt.Println("Start mining")
+	Mining(miner1Address, newBlock, &BC, 2)
 
 	//(if mining successful and no new block in the blockchain, requires async receiving msg from the network)
 	//broadcast to everyone in the network
 
+	// save thg
 	file, _ := json.MarshalIndent(&BC, "", " ")
-	_ = ioutil.WriteFile("BlockChain.json", file, os.ModePerm)
+	_ = ioutil.WriteFile("block_chain.json", file, os.ModePerm)
 }
