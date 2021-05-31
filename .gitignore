@@ -18,6 +18,7 @@
 .DS_Store
 .vscode
 
+accounts/
 *.key
 *.pem
 *.txt

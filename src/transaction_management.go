@@ -37,13 +37,13 @@ func (MP *MEMPool) updateMEMPool(Ts []Transaction) {
 	}
 }
 
-func (T *Transaction) transactionHashCalculation() {
+func (T *Transaction) txHashCalculation() {
 	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + strconv.FormatInt(T.TimeStamp, 10)
 	h := sha256.Sum256([]byte(hashString))
 	T.HashString = base64.StdEncoding.EncodeToString(h[:])
 }
 
-func InitTransaction(senderAddress string, receiverAddress string, amount float64, fee float64, message string) Transaction {
+func InitTx(senderAddress string, receiverAddress string, amount float64, fee float64, message string) Transaction {
 	T := Transaction{
 		From:      senderAddress,
 		To:        receiverAddress,
@@ -53,7 +53,7 @@ func InitTransaction(senderAddress string, receiverAddress string, amount float6
 		Message:   message,
 	}
 
-	T.transactionHashCalculation()
+	T.txHashCalculation()
 	return T
 }
 
@@ -67,7 +67,7 @@ func getPrivateKey(fileLocation string) (*ecdsa.PrivateKey, error) {
 	return key1, err
 }
 
-func (T *Transaction) SignTransaction(privateKeyLocation string) {
+func (T *Transaction) SignTx(privateKeyLocation string) {
 	privateKey, err := getPrivateKey(privateKeyLocation)
 	checkError(err)
 
@@ -80,7 +80,7 @@ func (T *Transaction) SignTransaction(privateKeyLocation string) {
 	T.Signature = signature
 }
 
-func (T Transaction) SendTransactionToPool(MP *MEMPool) {
+func (T Transaction) SendTxtoMEMPool(MP *MEMPool) {
 	MP.pendingTransactions = append(MP.pendingTransactions, T)
 }
 
@@ -101,7 +101,7 @@ func CoinBaseTransaction(minerID string, NB *Block) {
 		Accepted:  true,
 	}
 
-	T.transactionHashCalculation()
+	T.txHashCalculation()
 	NB.SelectedTransactionList = append(NB.SelectedTransactionList, T)
 }
 

@@ -46,7 +46,7 @@ func createCoinbaseAccount() {
 	AccountManagement["coinbase"] = &newAccount
 }
 
-func (BLK Block) blockConfirmationUpdateSystemAccount() {
+func (BLK Block) blockConfirmationUpdateAccounts() {
 	for _, eachT := range BLK.SelectedTransactionList {
 		eachT.updateAccount()
 	}

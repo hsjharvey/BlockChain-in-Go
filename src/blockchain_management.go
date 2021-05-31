@@ -16,14 +16,14 @@ type Block struct {
 	Index                   int           `json:"Index"`
 	PreviousBlockAddress    string        `json:"PreviousBlockAddress"`
 	TimeStamp               int64         `json:"TimeStamp"`
-	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 	MinerAddress            string        `json:"MinerAddress"`
 	Nonce                   int           `json:"Nonce"`
 	Difficulty              int           `json:"Difficulty"`
 	Hash                    string        `json:"HashString"`
+	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 }
 
-func InitializeNewBlock(BC *BlockChain) Block {
+func InitNewBlock(BC *BlockChain) Block {
 	lastBlock := BC.Chain[len(BC.Chain)-1]
 	newBLK := Block{}
 	newBLK.Index = lastBlock.Index + 1
@@ -31,7 +31,7 @@ func InitializeNewBlock(BC *BlockChain) Block {
 	newBLK.Nonce = 0
 	newBLK.BlockHashCalculation()
 
-	log.Println("New Block initialized")
+	log.Println("New block initialized")
 
 	return newBLK
 }
@@ -45,7 +45,7 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) Block
 	}
 	problemToBeSolved := strings.Join(diff[:], "")
 
-	log.Println("Target problem to be matched in mining: " + problemToBeSolved)
+	log.Println("Target hash header to be matched in mining: " + problemToBeSolved)
 
 	// solve the problem
 	for {
@@ -60,7 +60,7 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) Block
 
 			BC.Chain = append(BC.Chain, BLK)
 
-			log.Println("New Block (" + BLK.Hash + ") mined by (" + BLK.MinerAddress + ")")
+			log.Println("New block (" + BLK.Hash + ") mined by (" + BLK.MinerAddress + ")")
 			break
 		}
 	}
@@ -81,7 +81,7 @@ func (BLK *Block) BlockHashCalculation() {
 func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 	createCoinbaseAccount()
 	var TList []Transaction
-	genesisT := InitTransaction("coinbase", genesisUser, 5000.0, 0.0,
+	genesisT := InitTx("coinbase", genesisUser, 5000.0, 0.0,
 		"hello world")
 
 	genesisT.Signature = []byte("signed by God")
@@ -95,7 +95,7 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 		TimeStamp:               getCurrentUnixTime(),
 		SelectedTransactionList: TList,
 		Nonce:                   1992,
-		MinerAddress:            "Harvey",
+		MinerAddress:            "Harvey Huang",
 	}
 
 	b.BlockHashCalculation()

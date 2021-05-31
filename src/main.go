@@ -24,24 +24,25 @@ func main() {
 	CreateGenesisBlock(bmm1Address, &BC)
 
 	// create transactions and send to the pending transactions in the memory pool
-	Tx1 := InitTransaction(bmm1Address, bmm2Address, 100.0, 10.0,
+	Tx1 := InitTx(bmm1Address, bmm2Address, 100.0, 10.0,
 		"Brain, Mind and Markets 2021")
 	// sign the transaction
-	Tx1.SignTransaction("./accounts/private_bmm1.pem")
-	Tx1.SendTransactionToPool(&MP)
+	Tx1.SignTx("./accounts/private_bmm1.pem")
+	Tx1.SendTxtoMEMPool(&MP)
 
-	Tx2 := InitTransaction(bmm1Address, bmm2Address, 25.0, 1.0,
+	Tx2 := InitTx(bmm1Address, bmm2Address, 25.0, 1.0,
 		"Bazzinga")
-	Tx2.SignTransaction("./accounts/private_bmm1.pem")
-	Tx2.SendTransactionToPool(&MP)
+	Tx2.SignTx("./accounts/private_bmm1.pem")
+	Tx2.SendTxtoMEMPool(&MP)
 
-	Tx3 := InitTransaction(bmm2Address, bmm1Address, 17.0, 5.0,
+	// Note: this one should be rejected (Accept=false) as bmm2 does not have enough balance
+	Tx3 := InitTx(bmm2Address, bmm1Address, 17.0, 5.0,
 		"shadowlands")
-	Tx3.SignTransaction("./accounts/private_bmm2.pem")
-	Tx3.SendTransactionToPool(&MP)
+	Tx3.SignTx("./accounts/private_bmm2.pem")
+	Tx3.SendTxtoMEMPool(&MP)
 
 	// miner initialize a new block
-	newBlock := InitializeNewBlock(&BC)
+	newBlock := InitNewBlock(&BC)
 
 	// miner pick and verify the validity of the transactions
 	PickTxAndVerifyValidity(&newBlock, MP)
@@ -52,17 +53,19 @@ func main() {
 	minedBlock := Mining(miner1Address, newBlock, &BC, 2)
 
 	MP.updateMEMPool(minedBlock.SelectedTransactionList)
-	minedBlock.blockConfirmationUpdateSystemAccount()
+	minedBlock.blockConfirmationUpdateAccounts()
 
 	//(if mining successful and no new block in the blockchain, requires async receiving msg from the network)
 	//broadcast to everyone in the network
 
 	// save the blockchain in a
-	file, _ := json.MarshalIndent(&BC, "", " ")
+	file, _ := json.MarshalIndent(&BC, "", "  ")
 	_ = ioutil.WriteFile("./blockchain.json", file, os.ModePerm)
 
-	log.Println("Coinbase balance: ", BalanceCheck("coinbase"))
-	log.Println(bmm1Address, "balance: ", BalanceCheck(bmm1Address))
-	log.Println(bmm2Address, "balance: ", BalanceCheck(bmm2Address))
-	log.Println(miner1Address, " (miner) balance: ", BalanceCheck(miner1Address))
+	log.Println("----------------- Balance check -----------------")
+	log.Println("Coinbase: ", BalanceCheck("coinbase"))
+	log.Println(bmm1Address, ": ", BalanceCheck(bmm1Address))
+	log.Println(bmm2Address, ": ", BalanceCheck(bmm2Address))
+	log.Println(miner1Address, " (miner): ", BalanceCheck(miner1Address))
+	log.Println("-------------------------------------------------")
 }

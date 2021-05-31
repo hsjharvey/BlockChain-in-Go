@@ -9,8 +9,7 @@ import (
 
 func checkError(err error) {
 	if err != nil {
-		//fmt.Println("Fatal error ", err.Error())
-		os.Exit(1)
+		log.Fatal(err.Error())
 	}
 }
 func getCurrentUnixTime() int64 {
@@ -22,6 +21,7 @@ func config() {
 }
 
 func checkFolderExist() {
-	newpath := filepath.Join(".", "Accounts")
-	os.MkdirAll(newpath, os.ModePerm)
+	np := filepath.Join(".", "accounts")
+	err := os.MkdirAll(np, os.ModePerm)
+	checkError(err)
 }
