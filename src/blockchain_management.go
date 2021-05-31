@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -14,7 +15,7 @@ type BlockChain struct {
 type Block struct {
 	Index                   int           `json:"Index"`
 	PreviousBlockAddress    string        `json:"PreviousBlockAddress"`
-	TimeStamp               string        `json:"TimeStamp"`
+	TimeStamp               int64         `json:"TimeStamp"`
 	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 	MinerAddress            string        `json:"MinerAddress"`
 	Nonce                   int           `json:"Nonce"`
@@ -30,11 +31,11 @@ func InitializeNewBlock(BC *BlockChain) Block {
 	newBLK.Nonce = 0
 	newBLK.BlockHashCalculation()
 
-	//fmt.Println("New Block initialized")
+	log.Println("New Block initialized")
 
 	return newBLK
 }
-func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
+func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) Block {
 	// determine difficulty level
 	var diff []string
 	BLK.Difficulty = difficulty
@@ -44,7 +45,7 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
 	}
 	problemToBeSolved := strings.Join(diff[:], "")
 
-	//fmt.Println("Target hash: " + problemToBeSolved)
+	log.Println("Target problem to be matched in mining: " + problemToBeSolved)
 
 	// solve the problem
 	for {
@@ -59,10 +60,11 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) {
 
 			BC.Chain = append(BC.Chain, BLK)
 
-			//fmt.Println("New Block (" + BLK.Hash + ") mined by (" + BLK.MinerAddress + ")")
+			log.Println("New Block (" + BLK.Hash + ") mined by (" + BLK.MinerAddress + ")")
 			break
 		}
 	}
+	return BLK
 }
 
 func (BLK *Block) BlockHashCalculation() {
@@ -71,7 +73,7 @@ func (BLK *Block) BlockHashCalculation() {
 		hashTx += eachTx.HashString
 	}
 
-	hashString := BLK.TimeStamp + hashTx + BLK.PreviousBlockAddress + string(BLK.Nonce)
+	hashString := strconv.FormatInt(BLK.TimeStamp, 10) + hashTx + BLK.PreviousBlockAddress + string(BLK.Nonce)
 	h := sha256.Sum256([]byte(hashString))
 	BLK.Hash = base64.StdEncoding.EncodeToString(h[:])
 }
@@ -102,5 +104,5 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 
 	genesisT.updateAccount()
 
-	//fmt.Println("Genesis block generated")
+	log.Println("Genesis block generated")
 }

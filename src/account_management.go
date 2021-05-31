@@ -22,7 +22,6 @@ func CreateNewAccount(accountID string) string {
 	publicKey := privateKey.PublicKey
 
 	savePrivateKey("./accounts/private_"+accountID+".pem", privateKey)
-	//savePublicPEMKey("./accounts/public_"+accountID+".pem", &publicKey)
 
 	accountAddress := hashAndSaveAddress("./accounts/encoded_address_"+accountID+".txt", publicKey)
 
@@ -47,11 +46,17 @@ func createCoinbaseAccount() {
 	AccountManagement["coinbase"] = &newAccount
 }
 
+func (BLK Block) blockConfirmationUpdateSystemAccount() {
+	for _, eachT := range BLK.SelectedTransactionList {
+		eachT.updateAccount()
+	}
+}
+
 func (T Transaction) updateAccount() {
 	if T.Accepted {
 		// update sender
 		AccountManagement[T.From].TxCount += 1
-		AccountManagement[T.From].TotalSend += T.Amount
+		AccountManagement[T.From].TotalSend += T.Amount + T.Fee
 		AccountManagement[T.From].Transactions = append(AccountManagement[T.From].Transactions, T)
 
 		// update receiver

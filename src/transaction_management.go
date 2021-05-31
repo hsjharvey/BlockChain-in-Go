@@ -4,9 +4,11 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
 	"sort"
+	"strconv"
 )
 
 type Transaction struct {
@@ -14,7 +16,7 @@ type Transaction struct {
 	To         string  `json:"To"`
 	Amount     float64 `json:"Amount"`
 	Fee        float64 `json:"Fee"`
-	Time       string  `json:"TimeStamp"`
+	TimeStamp  int64   `json:"TimeStamp"`
 	HashString string  `json:"HashString"`
 	Message    string  `json:"Message"`
 	Signature  []byte  `json:"Signature"`
@@ -25,20 +27,30 @@ type MEMPool struct {
 	pendingTransactions []Transaction
 }
 
+func (MP *MEMPool) updateMEMPool(Ts []Transaction) {
+	for _, Tval := range Ts {
+		for j, pendingVal := range MP.pendingTransactions {
+			if pendingVal.HashString == Tval.HashString {
+				MP.pendingTransactions = append(MP.pendingTransactions[0:j], MP.pendingTransactions[j+1:]...)
+			}
+		}
+	}
+}
+
 func (T *Transaction) transactionHashCalculation() {
-	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + T.Time
+	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + strconv.FormatInt(T.TimeStamp, 10)
 	h := sha256.Sum256([]byte(hashString))
 	T.HashString = base64.StdEncoding.EncodeToString(h[:])
 }
 
 func InitTransaction(senderAddress string, receiverAddress string, amount float64, fee float64, message string) Transaction {
 	T := Transaction{
-		From:    senderAddress,
-		To:      receiverAddress,
-		Amount:  amount,
-		Fee:     fee,
-		Time:    getCurrentUnixTime(),
-		Message: message,
+		From:      senderAddress,
+		To:        receiverAddress,
+		Amount:    amount,
+		Fee:       fee,
+		TimeStamp: getCurrentUnixTime(),
+		Message:   message,
 	}
 
 	T.transactionHashCalculation()
@@ -48,12 +60,9 @@ func InitTransaction(senderAddress string, receiverAddress string, amount float6
 func getPrivateKey(fileLocation string) (*ecdsa.PrivateKey, error) {
 	key, err := ioutil.ReadFile(fileLocation)
 	checkError(err)
-	key1, err := crypto.HexToECDSA(string(key))
 
-	//fileBytes, _ := pem.Decode(key)
-	//der, err := x509.ParseECPrivateKey(fileBytes.Bytes)
-	//
-	//checkError(err)
+	key1, err := crypto.HexToECDSA(string(key))
+	checkError(err)
 
 	return key1, err
 }
@@ -82,12 +91,14 @@ func CoinBaseTransaction(minerID string, NB *Block) {
 	}
 
 	T := Transaction{
-		From:    "coinbase",
-		To:      minerID,
-		Amount:  50 + totalGas,
-		Fee:     0,
-		Time:    getCurrentUnixTime(),
-		Message: "reward for block miner",
+		From:      "coinbase",
+		To:        minerID,
+		Amount:    50 + totalGas,
+		Fee:       0,
+		TimeStamp: getCurrentUnixTime(),
+		Signature: []byte("signed by God"),
+		Message:   "reward for block miner",
+		Accepted:  true,
 	}
 
 	T.transactionHashCalculation()
@@ -100,14 +111,14 @@ func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
 		return MP.pendingTransactions[i].Fee > MP.pendingTransactions[j].Fee
 	})
 
-	idx := 0
-	for {
+	for _, eachT := range MP.pendingTransactions {
 		if len(NB.SelectedTransactionList) < 2 {
 			// check the balance and the validity of the transaction
-			MP.pendingTransactions[idx].TxValidityCheck()
-			if MP.pendingTransactions[idx].Accepted {
+			eachT.TxValidityCheck()
+
+			if eachT.Accepted {
 				// add this valid transaction to the new block
-				NB.SelectedTransactionList = append(NB.SelectedTransactionList, MP.pendingTransactions[idx])
+				NB.SelectedTransactionList = append(NB.SelectedTransactionList, eachT)
 			}
 		} else {
 			break
@@ -118,7 +129,7 @@ func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
 func (T *Transaction) TxValidityCheck() {
 	// Step 1: check whether has enough balance
 	Bal := BalanceCheck(T.From)
-	if Bal >= T.Fee {
+	if Bal >= T.Amount+T.Fee {
 		// Step 2: verify signature
 		recoveredPub, err := crypto.SigToPub(crypto.Keccak256([]byte(T.HashString)), T.Signature)
 		checkError(err)
