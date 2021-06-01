@@ -5,22 +5,23 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto"
 	"io/ioutil"
 	"sort"
 	"strconv"
+
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Transaction struct {
-	From       string  `json:"From"`
-	To         string  `json:"To"`
-	Amount     float64 `json:"Amount"`
-	Fee        float64 `json:"Fee"`
-	TimeStamp  int64   `json:"TimeStamp"`
-	HashString string  `json:"HashString"`
-	Message    string  `json:"Message"`
-	Signature  []byte  `json:"Signature"`
-	Accepted   bool    `json:"Accepted"`
+	From      string  `json:"From"`
+	To        string  `json:"To"`
+	Amount    float64 `json:"Amount"`
+	Fee       float64 `json:"Fee"`
+	TimeStamp int64   `json:"TimeStamp"`
+	TxHash    string  `json:"TxHash"`
+	Message   string  `json:"Message"`
+	Signature []byte  `json:"Signature"`
+	Accepted  bool    `json:"Accepted"`
 }
 
 type MEMPool struct {
@@ -30,7 +31,7 @@ type MEMPool struct {
 func (MP *MEMPool) updateMEMPool(Ts []Transaction) {
 	for _, Tval := range Ts {
 		for j, pendingVal := range MP.pendingTransactions {
-			if pendingVal.HashString == Tval.HashString {
+			if pendingVal.TxHash == Tval.TxHash {
 				MP.pendingTransactions = append(MP.pendingTransactions[0:j], MP.pendingTransactions[j+1:]...)
 			}
 		}
@@ -38,9 +39,9 @@ func (MP *MEMPool) updateMEMPool(Ts []Transaction) {
 }
 
 func (T *Transaction) txHashCalculation() {
-	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + strconv.FormatInt(T.TimeStamp, 10)
+	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + T.Message + strconv.FormatInt(T.TimeStamp, 10)
 	h := sha256.Sum256([]byte(hashString))
-	T.HashString = base64.StdEncoding.EncodeToString(h[:])
+	T.TxHash = base64.StdEncoding.EncodeToString(h[:])
 }
 
 func InitTx(senderAddress string, receiverAddress string, amount float64, fee float64, message string) Transaction {
@@ -71,7 +72,7 @@ func (T *Transaction) SignTx(privateKeyLocation string) {
 	privateKey, err := getPrivateKey(privateKeyLocation)
 	checkError(err)
 
-	decodedVal := crypto.Keccak256([]byte(T.HashString))
+	decodedVal := crypto.Keccak256([]byte(T.TxHash))
 	checkError(err)
 
 	signature, err := crypto.Sign(decodedVal, privateKey)
@@ -131,7 +132,7 @@ func (T *Transaction) TxValidityCheck() {
 	Bal := BalanceCheck(T.From)
 	if Bal >= T.Amount+T.Fee {
 		// Step 2: verify signature
-		recoveredPub, err := crypto.SigToPub(crypto.Keccak256([]byte(T.HashString)), T.Signature)
+		recoveredPub, err := crypto.SigToPub(crypto.Keccak256([]byte(T.TxHash)), T.Signature)
 		checkError(err)
 		recoveredAddr := crypto.PubkeyToAddress(*recoveredPub)
 

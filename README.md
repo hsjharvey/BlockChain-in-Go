@@ -4,49 +4,42 @@
 
 ## Description
 
-- This is a synchronous mini example of an ethereum based blockchain system, implemented in Go.
-
+- This is a Synchronous mini example of an Ethereum based blockchain system, implemented in Go.
+- See the [wiki page](https://github.com/hsjharvey/BlockChain-in-Go/wiki/A-not-so-technical-explanation-on-BlockChain-system) of this project for a detailed guide on blockchain system.
 <p align="center">
-    <img src="https://github.com/hsjharvey/Presentations/blob/master/2021_blockchain_illustration.svg">
+    <img src="https://github.com/hsjharvey/Presentations/blob/master/2021_blockchain_illustration.png">
 </p>
-<br>
+
 
 ## Requirement
 
 - See ```go.mod```.
 - GCC is required.
 
-<br>
 
 ## How-to-use
 
-- Terminal run ```go mod tidy```
+- Terminal run ```go mod tidy```.
 - Windows: terminal run ```go run ./src/.```
-- Mac: terminal run ```go run ./src/*.go```
-
-<br>
+- Mac: terminal run ```go run ./src/*.go```.
 
 ## Output
 
-- ```blockchain.json```
+- [```blockchain.json```](./blockchain.json)
 - terminal output:
 
 ```
-2021/05/31 19:39:18.161889 User and miner accounts generated
-2021/05/31 19:39:18.162406 Genesis block generated
-2021/05/31 19:39:18.169130 New block initialized
-2021/05/31 19:39:18.169683 Finish picking up transactions and complete verification process
-2021/05/31 19:39:18.169683 Start mining
-2021/05/31 19:39:18.170199 Target hash header to be matched in mining: 01
-2021/05/31 19:39:18.171776 New block (01Cb/eOCmKbYCnY9S9Ws/wtxlgu69Q25QBvDHSXMucc=) mined by (0xBB302989c963e8c6451399CAb4102046f2334bfd)
-2021/05/31 19:39:18.172303 ----------------- Balance check -----------------
-2021/05/31 19:39:18.172303 Coinbase:  3.141592653589793e+25
-2021/05/31 19:39:18.172303 0x43A128525DAD70133ffDBBa7CB1F1657f8dc8d11 :  4864
-2021/05/31 19:39:18.172831 0xd6c1dE015F764a33fdD07c160d01c40C4BD1504D :  125
-2021/05/31 19:39:18.172831 0xBB302989c963e8c6451399CAb4102046f2334bfd  (miner):  61
-2021/05/31 19:39:18.173361 -------------------------------------------------
+2021/06/01 15:15:28.171236 User and miner accounts generated
+2021/06/01 15:15:28.172268 Genesis block generated
+2021/06/01 15:15:28.179805 New block initialized
+2021/06/01 15:15:28.179843 Finish picking up transactions and complete verification process
+2021/06/01 15:15:28.179843 Start mining
+2021/06/01 15:15:28.180382 Target hash header to be matched in mining: 01
+2021/06/01 15:15:28.185864 New block (01ARr0wI68FG142A8L7e1Ej6uPHUBn1rUm6YAzYQoX8=) mined by (0x65da0e4e0d08Bf39846b88b49df10662c870143e)
+2021/06/01 15:15:28.186425 ----------------- Balance check -----------------
+2021/06/01 15:15:28.186425 Coinbase:  3.141592653589793e+25
+2021/06/01 15:15:28.186425 0x6273D800918fCDbD9729F75c069b9fBB4D410193 :  4864
+2021/06/01 15:15:28.186928 0xEfd0AB09a4A5d5241615b5E6e15493C064a3E161 :  125
+2021/06/01 15:15:28.186956 0x65da0e4e0d08Bf39846b88b49df10662c870143e  (miner):  61
+2021/06/01 15:15:28.186956 -------------------------------------------------
 ```
-
-## Reference:
-
-- [Nonce and difficulty](https://medium.com/verifyas/what-you-should-know-about-nonces-and-difficulty-8c4ce499a766)
