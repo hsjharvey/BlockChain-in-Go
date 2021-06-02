@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"sort"
 	"strconv"
@@ -39,7 +38,9 @@ func (MP *MEMPool) updateMEMPool(Ts []Transaction) {
 }
 
 func (T *Transaction) txHashCalculation() {
-	hashString := T.From + T.To + fmt.Sprintf("%f", T.Amount) + T.Message + strconv.FormatInt(T.TimeStamp, 10)
+	hashString := T.From + T.To + strconv.FormatFloat(T.Amount, 'f', -1, 64) +
+		T.Message + strconv.FormatInt(T.TimeStamp, 10)
+
 	h := sha256.Sum256([]byte(hashString))
 	T.TxHash = base64.StdEncoding.EncodeToString(h[:])
 }
@@ -86,15 +87,10 @@ func (T Transaction) SendTxtoMEMPool(MP *MEMPool) {
 }
 
 func CoinBaseTransaction(minerID string, NB *Block) {
-	totalGas := 0.0
-	for _, eachTx := range NB.SelectedTransactionList {
-		totalGas += eachTx.Fee
-	}
-
 	T := Transaction{
 		From:      "coinbase",
 		To:        minerID,
-		Amount:    50 + totalGas,
+		Amount:    MiningReward,
 		Fee:       0,
 		TimeStamp: getCurrentUnixTime(),
 		Signature: []byte("signed by God"),
@@ -106,25 +102,31 @@ func CoinBaseTransaction(minerID string, NB *Block) {
 	NB.SelectedTransactionList = append(NB.SelectedTransactionList, T)
 }
 
-func PickTxAndVerifyValidity(NB *Block, MP MEMPool) {
+func PickTxAndVerifyValidity(MP MEMPool, NB *Block) {
+	totalTxFee := 0.0
+
 	// sort the pending transactions based on fees
 	sort.Slice(MP.pendingTransactions, func(i, j int) bool {
 		return MP.pendingTransactions[i].Fee > MP.pendingTransactions[j].Fee
 	})
 
 	for _, eachT := range MP.pendingTransactions {
-		if len(NB.SelectedTransactionList) < 2 {
+		if len(NB.SelectedTransactionList) < TxLimitPerBlock+1 { // golang index starts with 0
 			// check the balance and the validity of the transaction
 			eachT.TxValidityCheck()
 
 			if eachT.Accepted {
 				// add this valid transaction to the new block
 				NB.SelectedTransactionList = append(NB.SelectedTransactionList, eachT)
+				totalTxFee += eachT.Fee
 			}
 		} else {
 			break
 		}
 	}
+
+	// update coinbase Tx amount: collecting all the fees
+	NB.SelectedTransactionList[0].Amount += totalTxFee
 }
 
 func (T *Transaction) TxValidityCheck() {

@@ -13,8 +13,6 @@ type AccountInfo struct {
 	Transactions []Transaction `json:"Transactions"`
 }
 
-var AccountManagement = make(map[string]*AccountInfo)
-
 func CreateNewAccount(accountID string) string {
 	privateKey, err := crypto.GenerateKey()
 	checkError(err)
@@ -31,7 +29,7 @@ func CreateNewAccount(accountID string) string {
 		TotalSend:    0.0,
 		Transactions: []Transaction{},
 	}
-	AccountManagement[accountAddress] = &newAccount
+	accountMgt[accountAddress] = &newAccount
 
 	return accountAddress
 }
@@ -39,11 +37,11 @@ func CreateNewAccount(accountID string) string {
 func createCoinbaseAccount() {
 	newAccount := AccountInfo{
 		TxCount:      0,
-		TotalReceive: 31415926535897932384626433,
+		TotalReceive: CoinBaseInitBalance,
 		TotalSend:    0.0,
 		Transactions: []Transaction{},
 	}
-	AccountManagement["coinbase"] = &newAccount
+	accountMgt["coinbase"] = &newAccount
 }
 
 func (BLK Block) blockConfirmationUpdateAccounts() {
@@ -55,19 +53,19 @@ func (BLK Block) blockConfirmationUpdateAccounts() {
 func (T Transaction) updateAccount() {
 	if T.Accepted {
 		// update sender
-		AccountManagement[T.From].TxCount += 1
-		AccountManagement[T.From].TotalSend += T.Amount + T.Fee
-		AccountManagement[T.From].Transactions = append(AccountManagement[T.From].Transactions, T)
+		accountMgt[T.From].TxCount += 1
+		accountMgt[T.From].TotalSend += T.Amount
+		accountMgt[T.From].Transactions = append(accountMgt[T.From].Transactions, T)
 
 		// update receiver
-		AccountManagement[T.To].TxCount += 1
-		AccountManagement[T.To].TotalReceive += T.Amount
-		AccountManagement[T.To].Transactions = append(AccountManagement[T.To].Transactions, T)
+		accountMgt[T.To].TxCount += 1
+		accountMgt[T.To].TotalReceive += T.Amount - T.Fee  // receiver bears the fee
+		accountMgt[T.To].Transactions = append(accountMgt[T.To].Transactions, T)
 	}
 }
 
 func BalanceCheck(AccountAddress string) float64 {
-	return AccountManagement[AccountAddress].TotalReceive - AccountManagement[AccountAddress].TotalSend
+	return accountMgt[AccountAddress].TotalReceive - accountMgt[AccountAddress].TotalSend
 }
 
 func hashAndSaveAddress(fileName string, pubKey ecdsa.PublicKey) string {

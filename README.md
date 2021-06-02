@@ -29,17 +29,17 @@
 - terminal output:
 
 ```
-2021/06/01 15:15:28.171236 User and miner accounts generated
-2021/06/01 15:15:28.172268 Genesis block generated
-2021/06/01 15:15:28.179805 New block initialized
-2021/06/01 15:15:28.179843 Finish picking up transactions and complete verification process
-2021/06/01 15:15:28.179843 Start mining
-2021/06/01 15:15:28.180382 Target hash header to be matched in mining: 01
-2021/06/01 15:15:28.185864 New block (01ARr0wI68FG142A8L7e1Ej6uPHUBn1rUm6YAzYQoX8=) mined by (0x65da0e4e0d08Bf39846b88b49df10662c870143e)
-2021/06/01 15:15:28.186425 ----------------- Balance check -----------------
-2021/06/01 15:15:28.186425 Coinbase:  3.141592653589793e+25
-2021/06/01 15:15:28.186425 0x6273D800918fCDbD9729F75c069b9fBB4D410193 :  4864
-2021/06/01 15:15:28.186928 0xEfd0AB09a4A5d5241615b5E6e15493C064a3E161 :  125
-2021/06/01 15:15:28.186956 0x65da0e4e0d08Bf39846b88b49df10662c870143e  (miner):  61
-2021/06/01 15:15:28.186956 -------------------------------------------------
+2021/06/02 12:04:51.007887 User and miner accounts generated
+2021/06/02 12:04:51.008406 Genesis block generated
+2021/06/02 12:04:51.014111 New block initialized
+2021/06/02 12:04:51.014111 Finish picking up transactions and complete verification process
+2021/06/02 12:04:51.014111 Start mining
+2021/06/02 12:04:51.014660 Target hash header to be matched in mining: 01
+2021/06/02 12:04:51.015167 New block (01cdGK6DiobLVeNXi8x9C+PY9+w3j+aL6UEo4cdwkfA=) mined by (0xc218cC68F0B1039BBDFCF19b92671Ed1a54FDbf1)
+2021/06/02 12:04:51.015681 ------------------- Balance check -------------------
+2021/06/02 12:04:51.015681 Coinbase:  2.9999994939e+10
+2021/06/02 12:04:51.016200 0xD701b4EEbDBCD9d89a2AD0bA8cb41d5ecb2d25a7 :  4875
+2021/06/02 12:04:51.016200 0xCdB7820b55992FDC9168846bf9B90a5a69AC2E53 :  114
+2021/06/02 12:04:51.016714 0xc218cC68F0B1039BBDFCF19b92671Ed1a54FDbf1  (miner):  61
+2021/06/02 12:04:51.016714 -----------------------------------------------------
 ```

@@ -8,8 +8,8 @@ import (
 
 func main() {
 	// configuration
-	config()
-	checkFolderExist()
+	configLog()
+	checkAccountFolderExist()
 
 	//initialize a blockchain
 	BC := BlockChain{}
@@ -21,7 +21,7 @@ func main() {
 	miner1Address := CreateNewAccount("miner1")
 	log.Println("User and miner accounts generated")
 
-	CreateGenesisBlock(bmm1Address, &BC)
+	createGenesisBlock(bmm1Address, &BC)
 
 	// create transactions and send to the pending transactions in the memory pool
 	Tx1 := InitTx(bmm1Address, bmm2Address, 100.0, 10.0,
@@ -42,15 +42,15 @@ func main() {
 	Tx3.SendTxtoMEMPool(&MP)
 
 	// miner initialize a new block
-	newBlock := InitNewBlock(&BC)
+	newBlock := BC.InitNewBlock(miner1Address)
 
 	// miner pick and verify the validity of the transactions
-	PickTxAndVerifyValidity(&newBlock, MP)
+	PickTxAndVerifyValidity(MP, &newBlock)
 	log.Println("Finish picking up transactions and complete verification process")
 
 	//mining (solve the math problem)
 	log.Println("Start mining")
-	minedBlock := Mining(miner1Address, newBlock, &BC, 2)
+	minedBlock := Mining(miner1Address, newBlock, &BC, MiningDifficultyLv)
 
 	MP.updateMEMPool(minedBlock.SelectedTransactionList)
 	minedBlock.blockConfirmationUpdateAccounts()
@@ -58,14 +58,14 @@ func main() {
 	//(if mining successful and no new block in the blockchain, requires async receiving msg from the network)
 	//broadcast to everyone in the network
 
-	// save the blockchain in a
+	// save the blockchain in json file
 	file, _ := json.MarshalIndent(&BC, "", "  ")
 	_ = ioutil.WriteFile("./blockchain.json", file, os.ModePerm)
 
-	log.Println("----------------- Balance check -----------------")
+	log.Println("------------------- Balance check -------------------")
 	log.Println("Coinbase: ", BalanceCheck("coinbase"))
 	log.Println(bmm1Address, ": ", BalanceCheck(bmm1Address))
 	log.Println(bmm2Address, ": ", BalanceCheck(bmm2Address))
 	log.Println(miner1Address, " (miner): ", BalanceCheck(miner1Address))
-	log.Println("-------------------------------------------------")
+	log.Println("-----------------------------------------------------")
 }

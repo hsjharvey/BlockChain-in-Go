@@ -23,12 +23,14 @@ type Block struct {
 	SelectedTransactionList []Transaction `json:"SelectedTransactionList"`
 }
 
-func InitNewBlock(BC *BlockChain) Block {
+func (BC *BlockChain) InitNewBlock(minerID string) Block {
 	lastBlock := BC.Chain[len(BC.Chain)-1]
 	newBLK := Block{}
 	newBLK.Index = lastBlock.Index + 1
 	newBLK.PreviousBlockAddress = lastBlock.BlockHash
 	newBLK.Nonce = 0
+	CoinBaseTransaction(minerID, &newBLK)
+
 	newBLK.BlockHashCalculation()
 
 	log.Println("New block initialized")
@@ -56,7 +58,6 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) Block
 			BLK.BlockHashCalculation()
 		} else {
 			BLK.MinerAddress = minerHashID
-			CoinBaseTransaction(minerHashID, &BLK)
 			BC.Chain = append(BC.Chain, BLK)
 
 			log.Println("New block (" + BLK.BlockHash + ") mined by (" + BLK.MinerAddress + ")")
@@ -67,17 +68,18 @@ func Mining(minerHashID string, BLK Block, BC *BlockChain, difficulty int) Block
 }
 
 func (BLK *Block) BlockHashCalculation() {
-	hashTx := ""
+	var selectedTxsHash string
 	for _, eachTx := range BLK.SelectedTransactionList {
-		hashTx += eachTx.TxHash
+		selectedTxsHash += eachTx.TxHash
 	}
 
-	hashString := strconv.FormatInt(BLK.TimeStamp, 10) + hashTx + BLK.PreviousBlockAddress + string(BLK.Nonce)
+	hashString := strconv.FormatInt(BLK.TimeStamp, 10) + selectedTxsHash +
+		BLK.PreviousBlockAddress + strconv.Itoa(BLK.Nonce)
 	h := sha256.Sum256([]byte(hashString))
 	BLK.BlockHash = base64.StdEncoding.EncodeToString(h[:])
 }
 
-func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
+func createGenesisBlock(genesisUser string, BC *BlockChain) {
 	createCoinbaseAccount()
 	var TList []Transaction
 	genesisT := InitTx("coinbase", genesisUser, 5000.0, 0.0,
@@ -93,7 +95,7 @@ func CreateGenesisBlock(genesisUser string, BC *BlockChain) {
 		PreviousBlockAddress:    "BigBang",
 		TimeStamp:               getCurrentUnixTime(),
 		SelectedTransactionList: TList,
-		Nonce:                   1992,
+		Nonce:                   2021,
 		MinerAddress:            "Harvey Huang",
 	}
 
