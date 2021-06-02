@@ -132,7 +132,7 @@ func PickTxAndVerifyValidity(MP MEMPool, NB *Block) {
 func (T *Transaction) TxValidityCheck() {
 	// Step 1: check whether has enough balance
 	Bal := BalanceCheck(T.From)
-	if Bal >= T.Amount+T.Fee {
+	if Bal >= T.Amount {
 		// Step 2: verify signature
 		recoveredPub, err := crypto.SigToPub(crypto.Keccak256([]byte(T.TxHash)), T.Signature)
 		checkError(err)
