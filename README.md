@@ -4,7 +4,7 @@
 
 ## Description
 
-- This is a Synchronous mini example of an Ethereum based blockchain system, implemented in Go.
+- This is a mini example of an Ethereum based blockchain system, implemented in Go.
 - See the [wiki page](https://github.com/hsjharvey/BlockChain-in-Go/wiki/A-not-so-technical-explanation-on-an-example-BlockChain-system) of this project for a detailed guide on blockchain system.
 <p align="center">
     <img src="https://github.com/hsjharvey/Presentations/blob/master/2021_blockchain_illustration.png">
